@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="postgres://qoyzhcqu:Qfk4Hsc8NgI6RZzKLNQGl2ieKWcuK7Dy@balarama.db.elephantsql.com:5432/qoyzhcqu" uuid="9be9db30-3f84-47bf-a58e-e344c4e132f8">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>postgres://qoyzhcqu:Qfk4Hsc8NgI6RZzKLNQGl2ieKWcuK7Dy@balarama.db.elephantsql.com:5432/qoyzhcqu</jdbc-url>
+    </data-source>
+  </component>
+</project>
