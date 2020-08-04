@@ -26,8 +26,19 @@ def create_poll(connection, title, owner_username, options):
             poll_id = cursor.fetchone()[0]
             poll_options = [(option_text, poll_id) for option_text in options]
             execute_values(cursor, "INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_options)
+            # replaced by execute_values
             # for poll_option in poll_options:
             #     cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_option)
+
+
+def get_latest_poll(connection):
+    with connection:
+        with connection.cursor as cursor:
+            cursor.execute("SELECT * FROM polls"
+                           "JOIN options ON polls.id=options.poll_id "
+                           "WHERE polls.id = ("
+                           "SELECT id FROM polls ORDER BY id DESC LIMIT 1)")
+            return cursor.fetchall()
 
 
 def get_polls():
@@ -42,9 +53,26 @@ def add_poll_vote():
     pass
 
 
-def get_poll_and_vote_results(connection, id):
-    pass
+def get_poll_and_vote_results(connection, poll_id):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT "
+                "options.id,"
+                "options.option_text,"
+                "COUNT(options.id),"
+                "COUNT(options.id)/SUM(COUNT(options.id)) OVER() *100.0"
+                # OVER(), window function. As I understand it allows us to SUM COUNT'ed after all rows were processed. 
+                # Because window function runs after COUNT were evaluated
+                "FROM options JOIN votes ON options.id=votes.option_id"
+                " WHERE options.poll_id=%s"
+                "GROUP BY options.id", (poll_id,)
+            )
+            return cursor.fetchall()
 
 
-def get_random_poll_vote(connection, id):
-    pass
+def get_random_poll_vote(connection, option_id):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM votes WHERE option_id=%s ORDER BY RANDOM() LIMIT 1", (option_id,))
+            return cursor.fetcone()
