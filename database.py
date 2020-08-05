@@ -13,6 +13,15 @@ SELECT_POLL_WITH_OPTION = "SELECT * FROM pols JOIN options ON polls.id=options.p
 INSERT_OPTION = "INSERT INTO options (option_text, poll_id) VALUES (%s)"  # (option_text, poll_id) goes as one tuple
 INSERT_VOTE = "INSERT INTO votes (username, option_id) VALUES (%s, %s)"
 
+TOP_VOTED_OPTION_FROM_EVERY_POLL = """Select 
+ DISTINCT ON (options.poll_id) poll_id, 
+ options.id, options.option_text, 
+ options.poll_id,
+ COUNT(votes.option_id) as vote_count
+  FROM options 
+  JOIN votes ON options.id=votes.option_id 
+  GROUP BY options.id ORDER BY options.poll_id, vote_count DESC;"""
+
 
 def create_tables():
     pass
