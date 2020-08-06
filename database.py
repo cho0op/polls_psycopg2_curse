@@ -14,7 +14,7 @@ CREATE_VOTES = """CREATE TABLE IF NOT EXISTS votes
 (username TEXT, option_id INTEGER, FOREIGN KEY (option_id) REFERENCES options(id));"""
 
 # SELECT_ALL_POLLS = "SELECT * FROM pols"
-SELECT_POLL_WITH_OPTION = "SELECT * FROM pols JOIN options ON polls.id=options.poll_id WHERE polls.id=%s"
+# SELECT_POLL_WITH_OPTIONS = "SELECT * FROM polls JOIN options ON polls.id=options.poll_id WHERE polls.id=%s"
 
 INSERT_OPTION = "INSERT INTO options (option_text, poll_id) VALUES (%s)"  # (option_text, poll_id) goes as one tuple
 INSERT_VOTE = "INSERT INTO votes (username, option_id) VALUES (%s, %s)"
@@ -54,6 +54,27 @@ def get_latest_poll(connection) -> List[PollWithOption]:
                            "WHERE polls.id = ("
                            "SELECT id FROM polls ORDER BY id DESC LIMIT 1)")
             return cursor.fetchall()
+
+
+def get_poll_with_options(connection, poll_id):
+    with connection:
+        with connection.cursor as cursor:
+            cursor.execute("SELECT * FROM polls JOIN options ON polls.id=options.poll_id WHERE polls.id=%s", (poll_id,))
+            return cursor.fetchall()
+
+
+def get_poll_options(connection, poll_id):
+    with connection:
+        with connection.cursor as cursor:
+            cursor.execute("SELECT * FROM options WHERE options.poll_id=%s", (poll_id,))
+            return cursor.fetchall()
+
+
+def get_poll(connection, poll_id) -> Poll:
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM polls WHERE polls.id=%s", (poll_id, ))
+            return cursor.fetchone()
 
 
 def get_polls(connection) -> List[Poll]:
