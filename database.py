@@ -29,8 +29,12 @@ TOP_VOTED_OPTION_FROM_EVERY_POLL = """Select
   GROUP BY options.id ORDER BY options.poll_id, vote_count DESC;"""
 
 
-def create_tables():
-    pass
+def create_tables(connection):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(CREATE_POLLS)
+            cursor.execute(CREATE_OPTIONS)
+            cursor.execute(CREATE_VOTES)
 
 
 def create_poll(connection, title: str, owner_username: str, options: List[str]):
@@ -107,7 +111,7 @@ def get_poll_details(connection, poll_id: int) -> List[PollWithOption]:
 def add_poll_vote(connection, username: str, option_id: int):
     with connection:
         with connection.cursor() as cursor:
-            cursor.execute("INSERT INTO votes VALUES (username, option_id)")
+            cursor.execute("INSERT INTO votes VALUES (%s, %s)", (username, option_id))
 
 
 def get_votes_for_option(connection, option_id) -> List[Vote]:
@@ -139,4 +143,4 @@ def get_random_poll_vote(connection, option_id: int) -> Vote:
     with connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM votes WHERE option_id=%s ORDER BY RANDOM() LIMIT 1", (option_id,))
-            return cursor.fetcone()
+            return cursor.fetchone()
