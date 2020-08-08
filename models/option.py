@@ -6,16 +6,19 @@ import database
 
 class Option:
     def __init__(self, option_text: str, poll_id: int, _id: int = None):
-        self.option_text = option_text
+        self.text = option_text
         self.poll_id = poll_id
         self.id = _id
 
+    def __str__(self):
+        return f"{self.id}: {self.text}"
+
     def __repr__(self):
-        return f"Option({self.id}, {self.option_text}, {self.poll_id})"
+        return f"Option({self.id}, {self.text}, {self.poll_id})"
 
     def save(self):
         connection = create_connection()
-        new_option_id = database.add_option(connection, self.option_text, self.poll_id)
+        new_option_id = database.add_option(connection, self.text, self.poll_id)
         connection.close()
         self.id = new_option_id
 
@@ -32,8 +35,8 @@ class Option:
         return votes
 
     @classmethod
-    def get(cls, option_id):
+    def get(cls, option_id: int) -> "Option":
         connection = create_connection()
         option = database.get_option(connection, option_id)
         connection.close()
-        return cls(option[1], option[2], option[1])
+        return cls(option[1], option[2], option[0])

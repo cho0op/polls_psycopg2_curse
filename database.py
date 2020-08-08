@@ -43,7 +43,7 @@ def create_tables(connection):
 
 def create_poll(connection, title: str, owner_username: str):
     with connection:
-        with connection.cursor as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("INSERT INTO polls (title, owner_username) VALUES (%s, %s) RETURNING id;",
                            (title, owner_username))
             poll_id = cursor.fetchone()[0]
@@ -79,7 +79,7 @@ def get_polls(connection) -> List[Poll]:
 
 def get_latest_poll(connection) -> Poll:
     with connection:
-        with connection.cursor as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM polls"
                            "WHERE polls.id = ("
                            "SELECT id FROM polls ORDER BY id DESC LIMIT 1)")
@@ -97,13 +97,14 @@ def get_latest_poll(connection) -> Poll:
 # -- options --
 def get_option(connection, option_id):
     with connection:
-        with connection.cursor as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM options WHERE options.id=%s", (option_id,))
+            return cursor.fetchone()
 
 
 def get_poll_options(connection, poll_id):
     with connection:
-        with connection.cursor as cursor:
+        with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM options WHERE options.poll_id=%s", (poll_id,))
             return cursor.fetchall()
 
