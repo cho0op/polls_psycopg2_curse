@@ -46,6 +46,13 @@ def create_poll(connection, title: str, owner_username: str, options: List[str])
             #     cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_option)
 
 
+def add_option(connection, option_text: str, poll_id: int):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s, %s) RETURNING id;",
+                           (option_text, poll_id))
+
+
 def get_latest_poll(connection) -> List[PollWithOption]:
     with connection:
         with connection.cursor as cursor:
@@ -70,10 +77,16 @@ def get_poll_options(connection, poll_id):
             return cursor.fetchall()
 
 
+def get_option(connection, option_id):
+    with connection:
+        with connection.cursor as cursor:
+            cursor.execute("SELECT * FROM options WHERE options.id=%s", (option_id,))
+
+
 def get_poll(connection, poll_id) -> Poll:
     with connection:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM polls WHERE polls.id=%s", (poll_id, ))
+            cursor.execute("SELECT * FROM polls WHERE polls.id=%s", (poll_id,))
             return cursor.fetchone()
 
 
@@ -91,8 +104,17 @@ def get_poll_details(connection, poll_id: int) -> List[PollWithOption]:
             return cursor.fetchall()
 
 
-def add_poll_vote():
-    pass
+def add_poll_vote(connection, username: str, option_id: int):
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("INSERT INTO votes VALUES (username, option_id)")
+
+
+def get_votes_for_option(connection, option_id) -> List[Vote]:
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM votes WHERE votes.option_id=%s", (option_id,))
+            return cursor.fetchall()
 
 
 def get_poll_and_vote_results(connection, poll_id: int) -> List[PollResults]:

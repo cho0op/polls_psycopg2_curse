@@ -1,10 +1,7 @@
 import database
 from typing import List
 from models.option import Option
-
-
-def create_connection():
-    pass
+from connections import create_connection
 
 
 class Poll:
@@ -25,6 +22,7 @@ class Poll:
     def add_option(self, option_text: str):
         Option(option_text, self.id).save()
 
+    @property
     def options(self) -> List[Option]:
         connection = create_connection()
         options = database.get_poll_options(connection, self.id)
