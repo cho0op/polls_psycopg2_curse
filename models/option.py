@@ -15,7 +15,7 @@ class Option:
 
     def save(self):
         connection = create_connection()
-        new_option_id = database.add_option(self.option_text, self.poll_id)
+        new_option_id = database.add_option(connection, self.option_text, self.poll_id)
         connection.close()
         self.id = new_option_id
 
