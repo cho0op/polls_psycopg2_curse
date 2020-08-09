@@ -1,7 +1,7 @@
 import database
 from typing import List
 from models.option import Option
-from connections import create_connection
+from connections import create_connection, connection_pool
 
 
 class Poll:
@@ -17,9 +17,12 @@ class Poll:
         return f"Poll({self.id}, {self.title}, {self.owner})"
 
     def save(self):
-        connection = create_connection()
+        connection = connection_pool.getconn()
+        # Instead of creating connection every time, we take it from the connection pool
+        # connection = create_connection()
         new_poll_id = database.create_poll(connection, self.title, self.owner)
-        connection.close()
+        # connection.close()
+        connection_pool.putconn(connection)
         self.id = new_poll_id
 
     def add_option(self, option_text: str):
@@ -27,28 +30,28 @@ class Poll:
 
     @property
     def options(self) -> List[Option]:
-        connection = create_connection()
+        connection = connection_pool.getconn()
         options = database.get_poll_options(connection, self.id)
-        connection.close()
+        connection_pool.putconn(connection)
         return [Option(option[1], option[2], option[0]) for option in options]
 
     @classmethod
     def get(cls, poll_id: int) -> "Poll":
-        connection = create_connection()
+        connection = connection_pool.getconn()
         poll = database.get_poll(connection, poll_id)
-        connection.close()
+        connection_pool.putconn(connection)
         return cls(poll[1], poll[2], poll[0])
 
     @classmethod
     def all(cls) -> List["Poll"]:
-        connection = create_connection()
+        connection = connection_pool.getconn()
         polls = database.get_polls(connection)
-        connection.close()
+        connection_pool.putconn(connection)
         return [cls(poll[1], poll[2], poll[0]) for poll in polls]
 
     @classmethod
     def latest(cls) -> "Poll":
-        connection = create_connection()
+        connection = connection_pool.getconn()
         poll = database.get_latest_poll(connection)
-        connection.close()
+        connection_pool.putconn(connection)
         return cls(poll[1], poll[2], poll[0])
