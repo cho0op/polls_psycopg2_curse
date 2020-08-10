@@ -2,6 +2,7 @@ import os
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 from dotenv import load_dotenv
+from contextlib import contextmanager
 
 load_dotenv()
 
@@ -13,3 +14,12 @@ def create_connection():
 
 
 connection_pool = SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_uri)
+
+
+@contextmanager
+def pool_handler():
+    connection = connection_pool.getconn()
+    try:
+        yield connection
+    finally:
+        connection_pool.putconn(connection)
