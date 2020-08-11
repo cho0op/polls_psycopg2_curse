@@ -1,4 +1,5 @@
 from typing import List, Tuple
+from contextlib import contextmanager
 from psycopg2.extras import execute_values
 
 Poll = Tuple[int, str, str]
@@ -30,43 +31,46 @@ TOP_VOTED_OPTION_FROM_EVERY_POLL = """Select
   GROUP BY options.id ORDER BY options.poll_id, vote_count DESC;"""
 
 
-def create_tables(connection):
+@contextmanager
+def get_cursor(connection):
     with connection:
         with connection.cursor() as cursor:
-            cursor.execute(CREATE_POLLS)
-            cursor.execute(CREATE_OPTIONS)
-            cursor.execute(CREATE_VOTES)
+            yield cursor
+
+
+def create_tables(connection):
+    with get_cursor(connection) as cursor:
+        cursor.execute(CREATE_POLLS)
+        cursor.execute(CREATE_OPTIONS)
+        cursor.execute(CREATE_VOTES)
 
 
 # -- polls --
 
 
 def create_poll(connection, title: str, owner_username: str):
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("INSERT INTO polls (title, owner_username) VALUES (%s, %s) RETURNING id;",
-                           (title, owner_username))
-            poll_id = cursor.fetchone()[0]
-            return poll_id
-            # poll_options = [(option_text, poll_id) for option_text in options]
-            # execute_values(cursor, "INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_options)
-            # replaced by execute_values
-            # for poll_option in poll_options:
-            #     cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_option)
+    with get_cursor(connection) as cursor:
+        cursor.execute("INSERT INTO polls (title, owner_username) VALUES (%s, %s) RETURNING id;",
+                       (title, owner_username))
+        poll_id = cursor.fetchone()[0]
+        return poll_id
+        # poll_options = [(option_text, poll_id) for option_text in options]
+        # execute_values(cursor, "INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_options)
+        # replaced by execute_values
+        # for poll_option in poll_options:
+        #     cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s);", poll_option)
 
 
 def get_poll(connection, poll_id) -> Poll:
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM polls WHERE polls.id=%s", (poll_id,))
-            return cursor.fetchone()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM polls WHERE polls.id=%s", (poll_id,))
+        return cursor.fetchone()
 
 
 def get_polls(connection) -> List[Poll]:
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM polls")
-            return cursor.fetchall()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM polls")
+        return cursor.fetchall()
 
 
 # def get_poll_options(connection, poll_id: int) -> List[Option]:
@@ -78,12 +82,11 @@ def get_polls(connection) -> List[Poll]:
 
 
 def get_latest_poll(connection) -> Poll:
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM polls"
-                           "WHERE polls.id = ("
-                           "SELECT id FROM polls ORDER BY id DESC LIMIT 1)")
-            return cursor.fetchone()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM polls"
+                       "WHERE polls.id = ("
+                       "SELECT id FROM polls ORDER BY id DESC LIMIT 1)")
+        return cursor.fetchone()
 
 
 # def get_poll_with_options(connection, poll_id):
@@ -96,39 +99,34 @@ def get_latest_poll(connection) -> Poll:
 
 # -- options --
 def get_option(connection, option_id):
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM options WHERE options.id=%s", (option_id,))
-            return cursor.fetchone()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM options WHERE options.id=%s", (option_id,))
+        return cursor.fetchone()
 
 
 def get_poll_options(connection, poll_id):
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM options WHERE options.poll_id=%s", (poll_id,))
-            return cursor.fetchall()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM options WHERE options.poll_id=%s", (poll_id,))
+        return cursor.fetchall()
 
 
 def add_option(connection, option_text: str, poll_id: int):
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s, %s) RETURNING id;",
-                           (option_text, poll_id))
-            option_id = cursor.fetchone()
-            return option_id
+    with get_cursor(connection) as cursor:
+        cursor.execute("INSERT INTO options (option_text, poll_id) VALUES (%s, %s) RETURNING id;",
+                       (option_text, poll_id))
+        option_id = cursor.fetchone()
+        return option_id
 
 
 def add_poll_vote(connection, username: str, option_id: int):
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("INSERT INTO votes VALUES (%s, %s)", (username, option_id))
+    with get_cursor(connection) as cursor:
+        cursor.execute("INSERT INTO votes VALUES (%s, %s)", (username, option_id))
 
 
 def get_votes_for_option(connection, option_id) -> List[Vote]:
-    with connection:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM votes WHERE votes.option_id=%s", (option_id,))
-            return cursor.fetchall()
+    with get_cursor(connection) as cursor:
+        cursor.execute("SELECT * FROM votes WHERE votes.option_id=%s", (option_id,))
+        return cursor.fetchall()
 
 # def get_poll_and_vote_results(connection, poll_id: int) -> List[PollResults]:
 #     with connection:

@@ -17,7 +17,7 @@ connection_pool = SimpleConnectionPool(minconn=1, maxconn=10, dsn=database_uri)
 
 
 @contextmanager
-def pool_handler():
+def get_cursor():
     connection = connection_pool.getconn()
     try:
         yield connection
