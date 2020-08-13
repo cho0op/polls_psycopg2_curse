@@ -5,7 +5,7 @@ import database
 
 from models.option import Option
 from models.poll import Poll
-from connections import create_connection, pool_handler
+from connections import create_connection, get_cursor
 
 DATABASE_PROMPT = "Enter new db URI or leave empty if you take it from .env"
 MENU = """--MENU--
@@ -94,7 +94,7 @@ MENU_OPTIONS = {
 
 
 def main():
-    with pool_handler() as connection:
+    with get_cursor() as connection:
         database.create_tables(connection)
     while (selection := input(MENU)) != "6":
         try:
